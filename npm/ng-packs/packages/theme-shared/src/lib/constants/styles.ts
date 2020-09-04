@@ -110,6 +110,20 @@ export default `
   max-height: 100vh;
 }
 
+
+ngb-datepicker-navigation-select {
+  position: relative;
+  min-height: 32px;
+}
+ngb-datepicker-navigation-select select:nth-child(2) {
+  left: 77px
+}
+ngb-datepicker-navigation-select select {
+  position: absolute;
+  width: 76px !important;
+  z-index: 2 !important;
+}
+
 [class^="sorting"] {
   opacity: .3;
   cursor: pointer;
