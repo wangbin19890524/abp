@@ -9,14 +9,20 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\framework\src\Volo.Abp.Autofac\Volo.Abp.Autofac.csproj" />
+        <ProjectReference Include="..\..\..\..\modules\identity\src\Volo.Abp.Identity.EntityFrameworkCore\Volo.Abp.Identity.EntityFrameworkCore.csproj" />
+        <ProjectReference Include="..\..\..\..\framework\src\Volo.Abp.EntityFrameworkCore.SqlServer\Volo.Abp.EntityFrameworkCore.SqlServer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.2.*" />
-      <PackageReference Include="Serilog.Extensions.Hosting" Version="3.1.0" />
-      <PackageReference Include="Serilog.Sinks.Async" Version="1.4.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
-      <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0-rc.2.*" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="3.1.0" />
+        <PackageReference Include="Serilog.Sinks.Async" Version="1.4.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+        <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.0-rc.2.*">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
@@ -25,5 +31,4 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 </Project>
