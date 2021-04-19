@@ -1,9 +1,8 @@
-import { APP_BASE_HREF, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { HttpClientModule, HttpClientXsrfModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { APP_INITIALIZER, Injector, ModuleWithProviders, NgModule } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { NgxsRouterPluginModule } from '@ngxs/router-plugin';
 import { NgxsModule } from '@ngxs/store';
 import { OAuthModule, OAuthStorage } from 'angular-oauth2-oidc';
 import { AbstractNgModelComponent } from './abstracts/ng-model.component';
@@ -12,7 +11,6 @@ import { ReplaceableRouteContainerComponent } from './components/replaceable-rou
 import { RouterOutletComponent } from './components/router-outlet.component';
 import { AutofocusDirective } from './directives/autofocus.directive';
 import { InputEventDebounceDirective } from './directives/debounce.directive';
-import { EllipsisDirective } from './directives/ellipsis.directive';
 import { ForDirective } from './directives/for.directive';
 import { FormSubmitDirective } from './directives/form-submit.directive';
 import { InitDirective } from './directives/init.directive';
@@ -25,7 +23,7 @@ import { RoutesHandler } from './handlers/routes.handler';
 import { ApiInterceptor } from './interceptors/api.interceptor';
 import { LocalizationModule } from './localization.module';
 import { ABP } from './models/common';
-import { LocalizationPipe, MockLocalizationPipe } from './pipes/localization.pipe';
+import { LocalizationPipe } from './pipes/localization.pipe';
 import { SortPipe } from './pipes/sort.pipe';
 import { LocaleProvider } from './providers/locale.provider';
 import { LocalizationService } from './services/localization.service';
@@ -53,11 +51,10 @@ export function storageFactory(): OAuthStorage {
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-
+    LocalizationModule,
     AbstractNgModelComponent,
     AutofocusDirective,
     DynamicLayoutComponent,
-    EllipsisDirective,
     ForDirective,
     FormSubmitDirective,
     InitDirective,
@@ -77,12 +74,12 @@ export function storageFactory(): OAuthStorage {
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
+    LocalizationModule,
   ],
   declarations: [
     AbstractNgModelComponent,
     AutofocusDirective,
     DynamicLayoutComponent,
-    EllipsisDirective,
     ForDirective,
     FormSubmitDirective,
     InitDirective,
@@ -95,6 +92,7 @@ export function storageFactory(): OAuthStorage {
     StopPropagationDirective,
     VisibilityDirective,
   ],
+  providers: [LocalizationPipe],
   entryComponents: [
     RouterOutletComponent,
     DynamicLayoutComponent,
@@ -113,7 +111,6 @@ export class BaseCoreModule {}
     BaseCoreModule,
     LocalizationModule,
     NgxsModule.forFeature([ProfileState]),
-    NgxsRouterPluginModule.forRoot(),
     OAuthModule.forRoot(),
     HttpClientXsrfModule.withOptions({
       cookieName: 'XSRF-TOKEN',
@@ -124,38 +121,13 @@ export class BaseCoreModule {}
 export class RootCoreModule {}
 
 /**
- * TestCoreModule is the module that will be used in tests
- * and it provides mock alternatives
- */
-@NgModule({
-  exports: [RouterModule, BaseCoreModule, MockLocalizationPipe],
-  imports: [RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }), BaseCoreModule],
-  declarations: [MockLocalizationPipe],
-})
-export class TestCoreModule {}
-
-/**
  * CoreModule is the module that is publicly available
  */
 @NgModule({
-  exports: [BaseCoreModule, LocalizationModule],
-  imports: [BaseCoreModule, LocalizationModule],
-  providers: [LocalizationPipe],
+  exports: [BaseCoreModule],
+  imports: [BaseCoreModule],
 })
 export class CoreModule {
-  static forTest({ baseHref = '/' } = {} as ABP.Test): ModuleWithProviders<TestCoreModule> {
-    return {
-      ngModule: TestCoreModule,
-      providers: [
-        { provide: APP_BASE_HREF, useValue: baseHref },
-        {
-          provide: LocalizationPipe,
-          useClass: MockLocalizationPipe,
-        },
-      ],
-    };
-  }
-
   static forRoot(options = {} as ABP.Root): ModuleWithProviders<RootCoreModule> {
     return {
       ngModule: RootCoreModule,

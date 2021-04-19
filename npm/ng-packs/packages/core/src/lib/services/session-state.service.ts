@@ -6,12 +6,6 @@ import { CurrentTenantDto } from '../proxy/volo/abp/asp-net-core/mvc/multi-tenan
 import { InternalStore } from '../utils/internal-store-utils';
 import { ConfigStateService } from './config-state.service';
 
-export interface SessionDetail {
-  openedTabCount: number;
-  lastExitTime: number;
-  remember: boolean;
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -30,7 +24,7 @@ export class SessionStateService {
   private init() {
     const session = localStorage.getItem('abpSession');
     if (session) {
-      this.store.patch(JSON.parse(session));
+      this.store.set(JSON.parse(session));
     }
 
     this.store.sliceUpdate(state => state).subscribe(this.updateLocalStorage);
@@ -81,7 +75,7 @@ export class SessionStateService {
   setTenant(tenant: CurrentTenantDto) {
     if (compare(tenant, this.store.state.tenant)) return;
 
-    this.store.patch({ tenant });
+    this.store.set({ ...this.store.state, tenant });
   }
 
   setLanguage(language: string) {

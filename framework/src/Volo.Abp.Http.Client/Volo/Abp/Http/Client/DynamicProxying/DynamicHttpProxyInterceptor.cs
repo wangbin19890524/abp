@@ -14,7 +14,6 @@ using Volo.Abp.Content;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.DynamicProxy;
 using Volo.Abp.Http.Client.Authentication;
-using Volo.Abp.Http.Client.Content;
 using Volo.Abp.Http.Modeling;
 using Volo.Abp.Http.ProxyScripting.Generators;
 using Volo.Abp.Json;
@@ -75,7 +74,7 @@ namespace Volo.Abp.Http.Client.DynamicProxying
             Logger = NullLogger<DynamicHttpProxyInterceptor<TService>>.Instance;
         }
 
-        public async override Task InterceptAsync(IAbpMethodInvocation invocation)
+        public override async Task InterceptAsync(IAbpMethodInvocation invocation)
         {
             if (invocation.Method.ReturnType.GenericTypeArguments.IsNullOrEmpty())
             {
@@ -107,12 +106,16 @@ namespace Volo.Abp.Http.Client.DynamicProxying
         {
             var responseContent = await MakeRequestAsync(invocation);
 
-            if (typeof(T) == typeof(IRemoteStreamContent))
+            if (typeof(T) == typeof(IRemoteStreamContent) ||
+                typeof(T) == typeof(RemoteStreamContent))
             {
                 /* returning a class that holds a reference to response
                  * content just to be sure that GC does not dispose of
                  * it before we finish doing our work with the stream */
-                return (T)((object)new ReferencedRemoteStreamContent(await responseContent.ReadAsStreamAsync(), responseContent));
+                return (T)(object)new RemoteStreamContent(await responseContent.ReadAsStreamAsync())
+                {
+                    ContentType = responseContent.Headers.ContentType?.ToString()
+                };
             }
 
             var stringContent = await responseContent.ReadAsStringAsync();
@@ -121,7 +124,12 @@ namespace Volo.Abp.Http.Client.DynamicProxying
                 return (T)(object)stringContent;
             }
 
-            return JsonSerializer.Deserialize<T>(await responseContent.ReadAsStringAsync());
+            if (stringContent.IsNullOrWhiteSpace())
+            {
+                return default;
+            }
+
+            return JsonSerializer.Deserialize<T>(stringContent);
         }
 
         private async Task<HttpContent> MakeRequestAsync(IAbpMethodInvocation invocation)
@@ -131,7 +139,13 @@ namespace Volo.Abp.Http.Client.DynamicProxying
 
             var client = HttpClientFactory.Create(clientConfig.RemoteServiceName);
 
-            var action = await ApiDescriptionFinder.FindActionAsync(client, remoteServiceConfig.BaseUrl, typeof(TService), invocation.Method);
+            var action = await ApiDescriptionFinder.FindActionAsync(
+                client,
+                remoteServiceConfig.BaseUrl,
+                typeof(TService),
+                invocation.Method
+            );
+
             var apiVersion = GetApiVersionInfo(action);
             var url = remoteServiceConfig.BaseUrl.EnsureEndsWith('/') + UrlBuilder.GenerateUrlWithParameters(action, invocation.ArgumentsDictionary, apiVersion);
 
@@ -151,9 +165,11 @@ namespace Volo.Abp.Http.Client.DynamicProxying
                 )
             );
 
-            var response = await client.SendAsync(requestMessage,
+            var response = await client.SendAsync(
+                requestMessage,
                 HttpCompletionOption.ResponseHeadersRead /*this will buffer only the headers, the content will be used as a stream*/,
-                GetCancellationToken());
+                GetCancellationToken()
+            );
 
             if (!response.IsSuccessStatusCode)
             {
@@ -191,7 +207,11 @@ namespace Volo.Abp.Http.Client.DynamicProxying
             return action.SupportedVersions.Last(); //TODO: Ensure to get the latest version!
         }
 
-        protected virtual void AddHeaders(IAbpMethodInvocation invocation, ActionApiDescriptionModel action, HttpRequestMessage requestMessage, ApiVersionInfo apiVersion)
+        protected virtual void AddHeaders(
+            IAbpMethodInvocation invocation,
+            ActionApiDescriptionModel action,
+            HttpRequestMessage requestMessage,
+            ApiVersionInfo apiVersion)
         {
             //API Version
             if (!apiVersion.Version.IsNullOrEmpty())

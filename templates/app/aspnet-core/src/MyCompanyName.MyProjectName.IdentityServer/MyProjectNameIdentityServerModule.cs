@@ -63,6 +63,8 @@ namespace MyCompanyName.MyProjectName
                 options.Languages.Add(new LanguageInfo("ar", "ar", "العربية"));
                 options.Languages.Add(new LanguageInfo("cs", "cs", "Čeština"));
                 options.Languages.Add(new LanguageInfo("en", "en", "English"));
+                options.Languages.Add(new LanguageInfo("en-GB", "en-GB", "English (UK)"));
+                options.Languages.Add(new LanguageInfo("fi", "fi", "Finnish"));
                 options.Languages.Add(new LanguageInfo("fr", "fr", "Français"));
                 options.Languages.Add(new LanguageInfo("hu", "hu", "Magyar"));
                 options.Languages.Add(new LanguageInfo("pt-BR", "pt-BR", "Português"));
@@ -112,6 +114,10 @@ namespace MyCompanyName.MyProjectName
             Configure<AppUrlOptions>(options =>
             {
                 options.Applications["MVC"].RootUrl = configuration["App:SelfUrl"];
+                options.RedirectAllowedUrls.AddRange(configuration["App:RedirectAllowedUrls"].Split(','));
+
+                options.Applications["Angular"].RootUrl = configuration["App:ClientUrl"];
+                options.Applications["Angular"].Urls[AccountUrlNames.PasswordReset] = "account/reset-password";
             });
 
             Configure<AbpBackgroundJobOptions>(options =>
@@ -170,7 +176,7 @@ namespace MyCompanyName.MyProjectName
             }
 
             app.UseCorrelationId();
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseCors(DefaultCorsPolicyName);
             app.UseAuthentication();
@@ -180,6 +186,7 @@ namespace MyCompanyName.MyProjectName
                 app.UseMultiTenancy();
             }
 
+            app.UseUnitOfWork();
             app.UseIdentityServer();
             app.UseAuthorization();
             app.UseAuditing();

@@ -3,9 +3,8 @@
 
 @inherits AbpFeatureManagementComponentBase
 
-<Modal @ref="Modal">
-    <ModalBackdrop />
-    <ModalContent Size="ModalSize.Large" IsCentered="true">
+<Modal @ref="Modal" Closing="@ClosingModal">
+    <ModalContent Size="ModalSize.Large" Centered="true">
         <ModalHeader>
             <ModalTitle>@L["Features"]</ModalTitle>
             <CloseButton Clicked="CloseModal" />
@@ -71,7 +70,7 @@
                                     if (feature.ValueType is ToggleStringValueType)
                                     {
                                         <Field>
-                                            <Check TValue="bool" @bind-checked="@ToggleValues[feature.Name]">@feature.DisplayName</Check>
+                                            <Check TValue="bool" @bind-Checked="@ToggleValues[feature.Name]">@feature.DisplayName</Check>
                                         </Field>
                                     }
                                 }

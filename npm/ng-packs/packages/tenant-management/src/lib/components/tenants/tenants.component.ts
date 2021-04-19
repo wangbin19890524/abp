@@ -16,6 +16,12 @@ import {
 import { GetTenantsInput, TenantDto } from '../../proxy/models';
 import { TenantService } from '../../proxy/tenant.service';
 import { TenantManagementState } from '../../states/tenant-management.state';
+import {
+  EXTENSIONS_IDENTIFIER,
+  FormPropData,
+  generateFormFromProps,
+} from '@abp/ng.theme.shared/extensions';
+import { eTenantManagementComponents } from '../../enums/components';
 
 interface SelectedModalContent {
   type: 'saveConnStr' | 'saveTenant';
@@ -26,7 +32,13 @@ interface SelectedModalContent {
 @Component({
   selector: 'abp-tenants',
   templateUrl: './tenants.component.html',
-  providers: [ListService],
+  providers: [
+    ListService,
+    {
+      provide: EXTENSIONS_IDENTIFIER,
+      useValue: eTenantManagementComponents.Tenants,
+    },
+  ],
 })
 export class TenantsComponent implements OnInit {
   @Select(TenantManagementState.get)
@@ -72,9 +84,6 @@ export class TenantsComponent implements OnInit {
   @ViewChild('tenantModalTemplate')
   tenantModalTemplate: TemplateRef<any>;
 
-  @ViewChild('connectionStringModalTemplate')
-  connectionStringModalTemplate: TemplateRef<any>;
-
   get isDisabledSaveButton(): boolean {
     if (!this.selectedModalContent) return false;
 
@@ -113,18 +122,8 @@ export class TenantsComponent implements OnInit {
   }
 
   private createTenantForm() {
-    const tenantForm = this.fb.group({
-      name: [this.selected.name || '', [Validators.required, Validators.maxLength(256)]],
-      adminEmailAddress: [null, [Validators.required, Validators.maxLength(256), Validators.email]],
-      adminPassword: [null, [Validators.required, ...getPasswordValidators(this.injector)]],
-    });
-
-    if (this.hasSelectedTenant) {
-      tenantForm.removeControl('adminEmailAddress');
-      tenantForm.removeControl('adminPassword');
-    }
-
-    this.tenantForm = tenantForm;
+    const data = new FormPropData(this.injector, this.selected);
+    this.tenantForm = generateFormFromProps(data);
   }
 
   private createDefaultConnectionStringForm() {
@@ -142,28 +141,6 @@ export class TenantsComponent implements OnInit {
     };
 
     this.isModalVisible = true;
-  }
-
-  onEditConnectionString(id: string) {
-    this.store
-      .dispatch(new GetTenantById(id))
-      .pipe(
-        pluck('TenantManagementState', 'selectedItem'),
-        switchMap(selected => {
-          this.selected = selected;
-          return this.tenantService.getDefaultConnectionString(id);
-        }),
-      )
-      .subscribe(fetchedConnectionString => {
-        this._useSharedDatabase = fetchedConnectionString ? false : true;
-        this.defaultConnectionString = fetchedConnectionString ? fetchedConnectionString : '';
-        this.createDefaultConnectionStringForm();
-        this.openModal(
-          'AbpTenantManagement::ConnectionStrings',
-          this.connectionStringModalTemplate,
-          'saveConnStr',
-        );
-      });
   }
 
   addTenant() {

@@ -49,7 +49,7 @@ namespace Volo.Abp.Cli.ProjectBuilding
 
         public async Task<ProjectBuildResult> BuildAsync(ProjectBuildArgs args)
         {
-            var templateInfo = GetTemplateInfo(args);
+            var templateInfo = await GetTemplateInfoAsync(args);
 
             NormalizeArgs(args, templateInfo);
 
@@ -104,6 +104,8 @@ namespace Volo.Abp.Cli.ProjectBuilding
 
             var context = new ProjectBuildContext(
                 templateInfo,
+                null,
+                null,
                 null,
                 templateFile,
                 args
@@ -175,11 +177,11 @@ namespace Volo.Abp.Cli.ProjectBuilding
             }
         }
 
-        private TemplateInfo GetTemplateInfo(ProjectBuildArgs args)
+        private async Task<TemplateInfo> GetTemplateInfoAsync(ProjectBuildArgs args)
         {
             if (args.TemplateName.IsNullOrWhiteSpace())
             {
-                return TemplateInfoProvider.GetDefault();
+                return await TemplateInfoProvider.GetDefaultAsync();
             }
             else
             {

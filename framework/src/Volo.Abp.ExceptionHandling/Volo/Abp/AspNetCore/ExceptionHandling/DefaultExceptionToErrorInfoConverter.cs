@@ -11,6 +11,7 @@ using Volo.Abp.Domain.Entities;
 using Volo.Abp.ExceptionHandling;
 using Volo.Abp.ExceptionHandling.Localization;
 using Volo.Abp.Http;
+using Volo.Abp.Http.Client;
 using Volo.Abp.Localization;
 using Volo.Abp.Localization.ExceptionHandling;
 using Volo.Abp.Validation;
@@ -62,10 +63,9 @@ namespace Volo.Abp.AspNetCore.ExceptionHandling
                 return CreateEntityNotFoundError(exception as EntityNotFoundException);
             }
 
-            if (exception is AbpAuthorizationException)
+            if (exception is AbpRemoteCallException remoteCallException)
             {
-                var authorizationException = exception as AbpAuthorizationException;
-                return new RemoteServiceErrorInfo(authorizationException.Message);
+                return remoteCallException.Error;
             }
 
             var errorInfo = new RemoteServiceErrorInfo();
@@ -147,7 +147,7 @@ namespace Volo.Abp.AspNetCore.ExceptionHandling
             {
                 foreach (var key in exception.Data.Keys)
                 {
-                    localizedValue = localizedValue.Replace("{" + key + "}", exception.Data[key].ToString());
+                    localizedValue = localizedValue.Replace("{" + key + "}", exception.Data[key]?.ToString());
                 }
             }
 
